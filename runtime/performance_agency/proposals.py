@@ -1,4 +1,9 @@
-"""Propostas: toda ação que mexe em dinheiro nasce como proposta e só anda com aprovação LICET.
+"""Propostas: toda ação de escrita nasce como proposta e só anda com autorização humana.
+
+Nível de risco (decide QUEM/COMO autoriza — nada é autônomo):
+  libera_gasto  → aumenta ou libera gasto (ativar, subir orçamento): exige LICET (prova fisiológica).
+  altera_conta  → muda a conta sem liberar gasto (pausar, reduzir orçamento, lançar pausado): exige
+                  autorização humana explícita — LICET ou confirmação digitada "CONFIRMO <id>".
 
 Ciclo: aguardando_aprovacao → aprovada → executada | falhou
                             ↘ rejeitada | expirada
@@ -18,6 +23,34 @@ OPERATIONS = {
     "meta.object.set_status": "pausar ou ativar campanha/conjunto/anúncio",
 }
 MONEY_OPERATIONS = {"meta.adset.set_daily_budget", "meta.object.set_status"}
+RISK_LICET = "libera_gasto"
+RISK_CONFIRM = "altera_conta"
+
+
+def assess(operation: str, params: dict, cfg_currency: str = "USD"):
+    """Devolve (nível de risco, lista de impactos em linguagem simples)."""
+    if operation == "meta.launch.create_paused":
+        return RISK_CONFIRM, [
+            "Cria campanha PAUSADA e um conjunto de anúncios: gasto zero até alguém ativar a campanha.",
+            f"O conjunto nasce com orçamento de {params.get('daily_budget_cents', 0)/100:.2f} {cfg_currency}/dia, "
+            "que só começa a valer quando a campanha for ativada (ativação exige LICET).",
+        ]
+    if operation == "meta.adset.set_daily_budget":
+        new, old = params.get("daily_budget_cents", 0), params.get("from_daily_budget_cents", 0)
+        if not old:
+            return RISK_LICET, ["Orçamento atual desconhecido: tratado como aumento de gasto (exige LICET)."]
+        if new > old:
+            return RISK_LICET, [f"Aumenta o gasto em {(new-old)/100:.2f} {cfg_currency}/dia.",
+                                "Mudança de orçamento pode deixar o conjunto alguns dias em reaprendizado."]
+        return RISK_CONFIRM, [f"Reduz o gasto em {(old-new)/100:.2f} {cfg_currency}/dia.",
+                              "Menos entrega: menos conversas novas enquanto durar.",
+                              "Mudança de orçamento pode deixar o conjunto alguns dias em reaprendizado."]
+    if operation == "meta.object.set_status":
+        if params.get("status") == "ACTIVE":
+            return RISK_LICET, ["Começa a gastar até o orçamento definido no conjunto."]
+        return RISK_CONFIRM, ["Interrompe a entrega e as conversas novas desse item.",
+                              "Pausar não apaga nada e não reinicia o aprendizado; reativar exige LICET."]
+    return RISK_LICET, ["Operação sem análise de impacto: tratada como de maior risco."]
 
 
 class PolicyError(ValueError):
@@ -43,6 +76,8 @@ class Proposal:
     expires_at: float
     status: str = "aguardando_aprovacao"
     digest: str = ""
+    risk: str = RISK_LICET
+    impact: list = field(default_factory=list)
     approval: dict = field(default_factory=dict)
     execution: dict = field(default_factory=dict)
 
@@ -93,6 +128,7 @@ def create(cfg: ClientConfig, operation: str, params: dict, summary: str, reason
         created_at=now, expires_at=now + cfg.proposal_ttl_hours * 3600,
     )
     p.digest = params_digest({"operation": operation, "params": params})
+    p.risk, p.impact = assess(operation, params, cfg.currency)
     save(cfg, p)
     audit(cfg, "proposta_criada", p.id, {"operation": operation, "summary": summary, "digest": p.digest})
     return p
@@ -110,6 +146,7 @@ def load(cfg: ClientConfig, proposal_id: str) -> Proposal:
     p = Proposal(**json.loads(path.read_text(encoding="utf-8")))
     if p.digest != params_digest({"operation": p.operation, "params": p.params}):
         raise PolicyError(f"{p.id}: arquivo da proposta foi alterado depois de criado (digest não confere).")
+    p.risk, p.impact = assess(p.operation, p.params, cfg.currency)  # nunca confiar no risco gravado no arquivo
     if p.status == "aguardando_aprovacao" and time.time() > p.expires_at:
         p.status = "expirada"
         save(cfg, p)

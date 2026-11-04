@@ -15,6 +15,8 @@ DEFAULTS = {
     "proposal_ttl_hours": 24,
     "approval_max_age_minutes": 60,
     "require_ui_binding": True,
+    "min_trust_level": "L1",
+    "require_ledger_integrity": True,
     "dry_run": True,
     "limits": {"max_daily_budget_cents": 0, "max_increase_pct": 20},
 }
@@ -33,6 +35,8 @@ class ClientConfig:
     proposal_ttl_hours: int = DEFAULTS["proposal_ttl_hours"]
     approval_max_age_minutes: int = DEFAULTS["approval_max_age_minutes"]
     require_ui_binding: bool = DEFAULTS["require_ui_binding"]
+    min_trust_level: str = DEFAULTS["min_trust_level"]
+    require_ledger_integrity: bool = DEFAULTS["require_ledger_integrity"]
     dry_run: bool = DEFAULTS["dry_run"]
     limits: dict = field(default_factory=lambda: dict(DEFAULTS["limits"]))
 

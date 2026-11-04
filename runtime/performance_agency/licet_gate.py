@@ -15,6 +15,7 @@ from .config import ClientConfig
 from .proposals import Proposal
 
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+TRUST_RANK = {"L0": 0, "L1": 1, "L2": 2, "L3": 3}
 
 
 @dataclass
@@ -36,8 +37,16 @@ def fetch_ledger_record(cfg: ClientConfig, intent_hash: str, timeout: float = 15
         raise
 
 
+def fetch_integrity(cfg: ClientConfig, timeout: float = 20.0) -> dict:
+    url = f"{cfg.licet_base_url.rstrip('/')}/ledger/integrity"
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "performance-agency/0.1"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
 def verify(cfg: ClientConfig, p: Proposal, intent_hash: str, used_hashes: set = frozenset(),
-           fetch=fetch_ledger_record, now: float = None, at_execution: bool = False) -> GateResult:
+           fetch=fetch_ledger_record, now: float = None, at_execution: bool = False,
+           integrity=fetch_integrity) -> GateResult:
     now = time.time() if now is None else now
     reasons = []
     intent_hash = (intent_hash or "").strip().lower()
@@ -53,6 +62,17 @@ def verify(cfg: ClientConfig, p: Proposal, intent_hash: str, used_hashes: set = 
     if not rec:
         return GateResult(False, ["Autorização não encontrada no ledger LICET."])
 
+    if cfg.require_ledger_integrity:
+        try:
+            integ = integrity(cfg)
+        except Exception as e:
+            return GateResult(False, [f"Não foi possível checar a integridade do ledger LICET: {type(e).__name__}."], rec)
+        if integ.get("status") != "INTACT" or integ.get("tampered") is not False:
+            return GateResult(False, [
+                f"Ledger LICET não está íntegro (status={integ.get('status')!r}, "
+                f"quebra a partir do registro {integ.get('tampered_at_id')}). Nenhuma aprovação é aceita até o LICET "
+                "corrigir a cadeia."], rec)
+
     def expect(cond, msg):
         if not cond:
             reasons.append(msg)
@@ -66,6 +86,10 @@ def verify(cfg: ClientConfig, p: Proposal, intent_hash: str, used_hashes: set = 
     if cfg.require_ui_binding:
         expect(rec.get("ui_binding_status") == "VERIFIED",
                f"Vínculo de tela não verificado (ui_binding_status={rec.get('ui_binding_status')!r}).")
+    level = str(rec.get("trust_level") or "L0")
+    need = cfg.min_trust_level if not cfg.dry_run else "L0"  # L0 (simulador) só vale em simulação
+    expect(TRUST_RANK.get(level, -1) >= TRUST_RANK.get(need, 1),
+           f"Nível de confiança {level} abaixo do mínimo {need} para execução real.")
     ts = float(rec.get("timestamp") or 0)
     expect(p.created_at - 120 <= ts <= p.expires_at, "Autorização feita fora da validade da proposta.")
     expect(now - ts <= cfg.approval_max_age_minutes * 60,

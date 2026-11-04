@@ -8,6 +8,7 @@ Comandos:
   propor-orcamento <adset_id> <atual_usd> <novo_usd> <motivo>
   propor-status <object_id> <PAUSED|ACTIVE> <motivo>
   aprovar <proposta> <intent_hash>    verifica a autorização no ledger LICET e aprova
+  confirmar <proposta> "CONFIRMO <id>" <nome>  autorização digitada (só para o que NÃO libera gasto)
   executar <proposta>                 reverifica no LICET e executa na Meta (simulação por padrão)
   pedido <proposta>                   mostra exatamente o que autorizar no app LICET
 """
@@ -23,6 +24,14 @@ def cents(usd: str) -> int:
 
 
 def show_request(cfg, p):
+    if p.risk == proposals.RISK_LICET:
+        print("\nRisco: LIBERA GASTO — só pode ser autorizada pelo LICET.")
+    else:
+        print("\nRisco: altera a conta sem liberar gasto — LICET ou confirmação digitada.")
+    for item in p.impact:
+        print(f"  • {item}")
+    if p.risk == proposals.RISK_CONFIRM:
+        print(f'Para confirmar sem LICET: confirmar {p.id} "CONFIRMO {p.id}" <seu nome>')
     print(f"\nAutorize no app LICET exatamente isto:\n"
           f"  action   : {p.licet_action()}\n"
           f"  agent_id : {cfg.agent_id}\n"
@@ -46,7 +55,7 @@ def main(argv=None):
               f"limite diário: {cfg.limits.get('max_daily_budget_cents', 0)/100:.2f} {cfg.currency} | "
               f"aumento máx.: {cfg.limits.get('max_increase_pct')}% | LICET: {cfg.licet_base_url}")
         for p in proposals.list_all(cfg):
-            print(f"- {p.id} [{p.status}] {p.summary}")
+            print(f"- {p.id} [{p.status}] [{p.risk}] {p.summary}")
         return 0
 
     if cmd == "propor-lancamento":
@@ -59,7 +68,8 @@ def main(argv=None):
 
     if cmd == "propor-orcamento":
         adset, atual, novo, motivo = args[0], cents(args[1]), cents(args[2]), " ".join(args[3:])
-        p = proposals.create(cfg, "meta.adset.set_daily_budget", {"object_id": adset, "daily_budget_cents": novo},
+        p = proposals.create(cfg, "meta.adset.set_daily_budget",
+                             {"object_id": adset, "daily_budget_cents": novo, "from_daily_budget_cents": atual},
                              f"Orçamento do conjunto {adset}: {atual/100:.2f} → {novo/100:.2f} {cfg.currency}/dia", motivo,
                              f"Voltar para {atual/100:.2f}/dia com nova proposta.", (novo - atual), current_daily_cents=atual)
         print(f"Proposta {p.id} criada: {p.summary}")
@@ -82,6 +92,11 @@ def main(argv=None):
     if cmd == "aprovar":
         p = executor.approve(cfg, args[0], args[1])
         print(f"{p.id} APROVADA pelo LICET (ledger #{p.approval.get('ledger_id')}, {p.approval.get('trust_level')}).")
+        return 0
+
+    if cmd == "confirmar":
+        p = executor.confirm(cfg, args[0], args[1], " ".join(args[2:]))
+        print(f"{p.id} CONFIRMADA por {p.approval.get('by') or 'humano'} (sem liberar gasto).")
         return 0
 
     if cmd == "executar":

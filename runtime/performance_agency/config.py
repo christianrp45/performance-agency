@@ -17,6 +17,7 @@ DEFAULTS = {
     "require_ui_binding": True,
     "min_trust_level": "L1",
     "require_ledger_integrity": True,
+    "spend_approval": "licet",  # "licet" ou "humano" (autorização digitada enquanto o LICET não está ativo)
     "dry_run": True,
     "limits": {"max_daily_budget_cents": 0, "max_increase_pct": 20},
 }
@@ -37,6 +38,7 @@ class ClientConfig:
     require_ui_binding: bool = DEFAULTS["require_ui_binding"]
     min_trust_level: str = DEFAULTS["min_trust_level"]
     require_ledger_integrity: bool = DEFAULTS["require_ledger_integrity"]
+    spend_approval: str = DEFAULTS["spend_approval"]
     dry_run: bool = DEFAULTS["dry_run"]
     limits: dict = field(default_factory=lambda: dict(DEFAULTS["limits"]))
 
@@ -64,6 +66,8 @@ def load(folder) -> ClientConfig:
     known = {k: v for k, v in data.items() if k in ClientConfig.__dataclass_fields__ and k not in ("folder", "limits")}
     cfg = ClientConfig(folder=folder, limits=limits, **known)
     # Desligar a simulação exige "dry_run": false no config E AGENCY_DRY_RUN=0 no ambiente.
+    if cfg.spend_approval not in ("licet", "humano"):
+        raise ValueError('spend_approval deve ser "licet" ou "humano".')
     if os.environ.get("AGENCY_DRY_RUN") != "0":
         cfg.dry_run = True
     return cfg

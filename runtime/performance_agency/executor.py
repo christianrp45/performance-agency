@@ -1,7 +1,8 @@
 """Autorizar e executar propostas. Única porta de saída para a API da Meta.
 
 Nada é autônomo: toda escrita precisa de autorização humana registrada.
-  - libera_gasto  → só LICET (prova de autorização humana livre e consciente).
+  - libera_gasto  → LICET (prova de autorização humana livre e consciente); enquanto o LICET não estiver
+                    ativo, o cliente pode escolher `spend_approval: "humano"` → "AUTORIZO GASTO <id>" + nome.
   - altera_conta  → LICET ou confirmação digitada "CONFIRMO <id>".
 Antes de executar de verdade, o estado atual na Meta é conferido: se mudou desde a proposta,
 a execução é recusada e o humano precisa ser consultado de novo.
@@ -38,18 +39,32 @@ def approve(cfg: ClientConfig, proposal_id: str, intent_hash: str, fetch=licet_g
 
 
 def confirm(cfg: ClientConfig, proposal_id: str, phrase: str, who: str = ""):
-    """Confirmação humana digitada — só para ações que NÃO liberam gasto."""
+    """Autorização humana digitada.
+
+    - Ações que NÃO liberam gasto: frase "CONFIRMO <id>".
+    - Ações que liberam gasto: só se o cliente escolheu `spend_approval: "humano"` (enquanto o LICET não
+      estiver ativo), com a frase "AUTORIZO GASTO <id>" e o nome de quem autoriza. Caso contrário, só LICET.
+    """
     p = proposals.load(cfg, proposal_id)
     if p.status != "aguardando_aprovacao":
         raise ExecutionRefused(f"{p.id} está '{p.status}', não aguarda aprovação.")
-    if p.risk != proposals.RISK_CONFIRM:
-        raise ExecutionRefused(f"{p.id} libera gasto: só pode ser autorizada pelo LICET.")
-    if (phrase or "").strip() != f"CONFIRMO {p.id}":
-        raise ExecutionRefused(f"Para confirmar, digite exatamente: CONFIRMO {p.id}")
+    phrase = (phrase or "").strip()
+    if p.risk == proposals.RISK_LICET:
+        if cfg.spend_approval != "humano":
+            raise ExecutionRefused(f"{p.id} libera gasto: só pode ser autorizada pelo LICET.")
+        expected = f"AUTORIZO GASTO {p.id}"
+        if not who.strip():
+            raise ExecutionRefused("Informe o nome de quem autoriza o gasto.")
+    else:
+        expected = f"CONFIRMO {p.id}"
+    if phrase != expected:
+        raise ExecutionRefused(f"Para autorizar, digite exatamente: {expected}")
     p.status = "aprovada"
-    p.approval = {"method": "confirmacao", "by": who, "phrase": phrase.strip(), "confirmed_at": time.time()}
+    p.approval = {"method": "confirmacao", "by": who.strip(), "phrase": phrase, "confirmed_at": time.time(),
+                  "releases_spend": p.risk == proposals.RISK_LICET}
     proposals.save(cfg, p)
-    proposals.audit(cfg, "aprovada", p.id, {"method": "confirmacao", "by": who})
+    proposals.audit(cfg, "aprovada", p.id, {"method": "confirmacao", "by": who.strip(),
+                                            "releases_spend": p.risk == proposals.RISK_LICET})
     return p
 
 
@@ -63,7 +78,10 @@ def _check_authorization(cfg, p, fetch, integrity):
     if p.status != "aprovada" or not method:
         raise ExecutionRefused(f"{p.id} não tem autorização humana (status '{p.status}'). Nada executado.")
     if p.risk == proposals.RISK_LICET and method != "licet":
-        raise ExecutionRefused(f"{p.id} libera gasto e só foi confirmada sem LICET. Autorize pelo LICET.")
+        human_ok = (cfg.spend_approval == "humano" and p.approval.get("by")
+                    and p.approval.get("phrase") == f"AUTORIZO GASTO {p.id}")
+        if not human_ok:
+            raise ExecutionRefused(f"{p.id} libera gasto e não tem autorização válida para isso. Autorize pelo LICET.")
     if method == "licet":  # reverifica no momento da execução: revogação, idade, integridade, nível
         res = licet_gate.verify(cfg, p, p.approval["intent_hash"], fetch=fetch, at_execution=True, integrity=integrity)
         if not res.ok:

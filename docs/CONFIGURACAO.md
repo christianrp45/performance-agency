@@ -72,6 +72,12 @@ alguns dias em reaprendizado"). O nível de risco é recalculado a cada leitura 
 **Antes de executar de verdade**, o executor confere o estado atual na Meta. Se o orçamento ou o status mudou desde a
 proposta, ou se o item está numa situação inesperada, a execução é recusada e é preciso uma nova proposta (nova consulta).
 
+### Enquanto o LICET não estiver ativo para o cliente
+
+`"spend_approval": "humano"` no `config.json` permite autorizar gasto com a frase **`AUTORIZO GASTO <id>`** e o **nome**
+de quem autoriza (registrado em `auditoria.jsonl`). É uma escolha explícita e temporária do cliente; ao voltar para
+`"licet"`, autorizações digitadas de gasto ainda não executadas deixam de valer.
+
 ## 3.2 Exigências do portão LICET
 
 - Ledger **íntegro**: `GET /ledger/integrity` precisa responder `INTACT`. Se responder `TAMPERED`, nenhuma aprovação é aceita
@@ -95,6 +101,7 @@ python -m performance_agency "<pasta do cliente>" pedido PA-20261104-001
 python -m performance_agency "<pasta do cliente>" aprovar PA-20261104-001 <intent_hash>
 python -m performance_agency "<pasta do cliente>" confirmar PA-20261104-002 "CONFIRMO PA-20261104-002" "Nome de quem confirmou"
 python -m performance_agency "<pasta do cliente>" executar PA-20261104-001
+python -m performance_agency "<pasta do cliente>" relatorio
 python -m performance_agency "<pasta do cliente>" propor-orcamento <adset_id> 15 18 "custo por conversa abaixo da meta há 2 semanas"
 python -m performance_agency "<pasta do cliente>" propor-status <campaign_id> ACTIVE "aprovado o plano Essencial"
 ```

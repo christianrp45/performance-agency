@@ -232,5 +232,57 @@ class ExecutorTests(Base):
         self.assertTrue(cfg.dry_run)
 
 
+class HumanSpendApprovalTests(Base):
+    """Enquanto o LICET não está ativo, o cliente pode escolher autorização humana digitada para gasto."""
+
+    def test_default_still_requires_licet_for_spend(self):
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.confirm(self.cfg, self.p.id, f"AUTORIZO GASTO {self.p.id}", "Christian")
+
+    def test_human_mode_needs_exact_phrase_and_name(self):
+        cfg = make_cfg(self.tmp / "h1", spend_approval="humano")
+        p = proposals.create(cfg, "meta.object.set_status", {"object_id": "1", "status": "ACTIVE"}, "Ativar 1", "x", "x")
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.confirm(cfg, p.id, f"CONFIRMO {p.id}", "Christian")  # frase de ação sem gasto não serve
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.confirm(cfg, p.id, f"AUTORIZO GASTO {p.id}", "  ")  # sem nome
+        executor.confirm(cfg, p.id, f"AUTORIZO GASTO {p.id}", "Christian")
+        _, result = executor.execute(cfg, p.id, meta=MetaClient("", dry_run=True), integrity=INTACT)
+        self.assertEqual(result["params"]["status"], "ACTIVE")
+
+    def test_switching_back_to_licet_invalidates_typed_spend_approval(self):
+        cfg = make_cfg(self.tmp / "h2", spend_approval="humano")
+        p = proposals.create(cfg, "meta.object.set_status", {"object_id": "1", "status": "ACTIVE"}, "Ativar 1", "x", "x")
+        executor.confirm(cfg, p.id, f"AUTORIZO GASTO {p.id}", "Christian")
+        cfg_licet = make_cfg(self.tmp / "h2", spend_approval="licet")
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.execute(cfg_licet, p.id, meta=MetaClient("", dry_run=True), integrity=INTACT)
+
+    def test_invalid_mode_rejected(self):
+        with self.assertRaises(ValueError):
+            make_cfg(self.tmp / "h3", spend_approval="automatico")
+
+
+class ReportTests(Base):
+    def test_report_from_api_flags_ads(self):
+        from performance_agency import report
+        meta = FakeMeta()
+        meta.insights = lambda *a, **k: {"data": [
+            {"ad_name": "A1 video", "adset_name": "DAL", "spend": "70", "frequency": "1.4",
+             "actions": [{"action_type": "onsite_conversion.messaging_conversation_started_7d", "value": "0"}]},
+            {"ad_name": "A3 imagem", "adset_name": "DAL", "spend": "40", "frequency": "3.1",
+             "actions": [{"action_type": "onsite_conversion.messaging_conversation_started_7d", "value": "4"}]},
+        ]}
+        text = report.from_api(self.cfg, meta)
+        self.assertIn("gastou 3× o alvo sem conversa", text)
+        self.assertIn("frequência alta", text)
+        self.assertIn("$110.00 gastos", text)
+
+    def test_report_without_csv_says_missing(self):
+        from performance_agency import report
+        path = report.write(self.cfg)
+        self.assertIn("MISSING", path.read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,15 +8,17 @@ Comandos:
   propor-orcamento <adset_id> <atual_usd> <novo_usd> <motivo>
   propor-status <object_id> <PAUSED|ACTIVE> <motivo>
   aprovar <proposta> <intent_hash>    verifica a autorização no ledger LICET e aprova
-  confirmar <proposta> "CONFIRMO <id>" <nome>  autorização digitada (só para o que NÃO libera gasto)
+  confirmar <proposta> "<frase>" <nome>  autorização digitada: "CONFIRMO <id>" (não libera gasto) ou
+                                      "AUTORIZO GASTO <id>" (libera gasto, se spend_approval = "humano")
   executar <proposta>                 reverifica no LICET e executa na Meta (simulação por padrão)
   pedido <proposta>                   mostra exatamente o que autorizar no app LICET
+  relatorio                           grava relatorios/AAAA-MM-DD.md (API da Meta ou CSV mais recente em dados/)
 """
 import json
 import sys
 from pathlib import Path
 
-from . import config, executor, proposals
+from . import config, executor, proposals, report
 
 
 def cents(usd: str) -> int:
@@ -24,7 +26,10 @@ def cents(usd: str) -> int:
 
 
 def show_request(cfg, p):
-    if p.risk == proposals.RISK_LICET:
+    if p.risk == proposals.RISK_LICET and cfg.spend_approval == "humano":
+        print("\nRisco: LIBERA GASTO — autorização humana digitada (LICET ainda não ativo para este cliente).")
+        print(f'Para autorizar: confirmar {p.id} "AUTORIZO GASTO {p.id}" <seu nome>')
+    elif p.risk == proposals.RISK_LICET:
         print("\nRisco: LIBERA GASTO — só pode ser autorizada pelo LICET.")
     else:
         print("\nRisco: altera a conta sem liberar gasto — LICET ou confirmação digitada.")
@@ -53,7 +58,8 @@ def main(argv=None):
         print(f"Cliente: {cfg.name} | conta: act_{cfg.ad_account_id or 'MISSING'} | página: {cfg.page_id or 'MISSING'}")
         print(f"Simulação: {'LIGADA (nada é enviado à Meta)' if cfg.dry_run else 'DESLIGADA'} | "
               f"limite diário: {cfg.limits.get('max_daily_budget_cents', 0)/100:.2f} {cfg.currency} | "
-              f"aumento máx.: {cfg.limits.get('max_increase_pct')}% | LICET: {cfg.licet_base_url}")
+              f"aumento máx.: {cfg.limits.get('max_increase_pct')}% | autorização de gasto: "
+              f"{'LICET' if cfg.spend_approval == 'licet' else 'humana digitada (LICET depois)'}")
         for p in proposals.list_all(cfg):
             print(f"- {p.id} [{p.status}] [{p.risk}] {p.summary}")
         return 0
@@ -92,6 +98,11 @@ def main(argv=None):
     if cmd == "aprovar":
         p = executor.approve(cfg, args[0], args[1])
         print(f"{p.id} APROVADA pelo LICET (ledger #{p.approval.get('ledger_id')}, {p.approval.get('trust_level')}).")
+        return 0
+
+    if cmd == "relatorio":
+        meta = None if cfg.dry_run else executor.client_for(cfg)
+        print(f"Relatório gravado em {report.write(cfg, meta)}")
         return 0
 
     if cmd == "confirmar":

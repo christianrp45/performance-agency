@@ -1,0 +1,11 @@
+{
+  "name": "agencia-performance",
+  "owner": { "name": "Christian" },
+  "plugins": [
+    {
+      "name": "agencia-performance",
+      "source": "./",
+      "description": "Agência de marketing de performance focada em venda (Meta Ads, Google Ads, criativos, oferta, rastreio, landing page, relatório)."
+    }
+  ]
+}

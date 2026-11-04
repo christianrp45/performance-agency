@@ -1,0 +1,11 @@
+# Dados de clientes nunca entram no repositório
+clientes/
+dados/
+relatorios/
+*.csv
+!skills/agencia/templates/planilha-vendas.csv
+.env
+*.env
+__pycache__/
+*.pyc
+.vercel

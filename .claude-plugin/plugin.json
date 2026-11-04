@@ -1,0 +1,8 @@
+{
+  "name": "agencia-performance",
+  "description": "Agência de marketing de performance focada em venda: diretor (orquestrador) + especialistas em oferta, criativos, Meta Ads, Google Ads, rastreio, landing page e relatório semanal.",
+  "version": "0.1.0",
+  "author": { "name": "Christian" },
+  "license": "MIT",
+  "keywords": ["marketing", "meta-ads", "google-ads", "paid-traffic", "performance", "pt-br"]
+}

@@ -91,6 +91,15 @@ de quem autoriza (registrado em `auditoria.jsonl`). É uma escolha explícita e 
 Simulação é o padrão: o executor mostra a chamada que faria, sem token e sem enviar nada.
 Modo real exige **as duas coisas**: `"dry_run": false` no `config.json` **e** `AGENCY_DRY_RUN=0` no ambiente.
 
+## 4.1 Anúncios (imagem e vídeo)
+
+O lançamento (`propor-lancamento`) e `propor-anuncios` sobem a mídia, criam o criativo de mensagem (Messenger +
+Instagram + WhatsApp, `DOF_MESSAGING_DESTINATION`) e o anúncio. Cada arquivo (`file`, e `thumbnail` no vídeo) fica
+**vinculado pelo SHA-256 na proposta**: se o arquivo mudar depois da autorização, a execução é recusada. Arquivos só
+de dentro da pasta do cliente. Precisa de `instagram_user_id` no `config.json`.
+Anúncios novos numa campanha ativa liberam gasto (exigem autorização de gasto); com `"campaign_paused_expected": true`
+a campanha é conferida na Meta antes e a execução para se ela estiver ativa.
+
 ## 5. Comandos
 
 ```bash
@@ -110,5 +119,4 @@ Testes: `python -m unittest tests/test_agency.py` (LICET e Meta simulados).
 
 ## O que o runtime NÃO faz (de propósito)
 
-Apagar campanhas · criar anúncios com criativos (por enquanto, os anúncios são adicionados no Gerenciador dentro
-do conjunto criado) · gastar acima do teto do cliente · executar sem LICET · guardar token fora do `.env`.
+Apagar campanhas · gastar acima do teto do cliente · executar sem LICET · guardar token fora do `.env`.

@@ -78,6 +78,89 @@ class MetaClient:
             "targeting": targeting,
         })
 
+    # ---- criativos e anúncios de mensagem (Messenger + Instagram + WhatsApp) ----
+    def _post_file(self, path: str, field_name: str, file_path, fields: dict) -> dict:
+        """Upload multipart (vídeo). Em simulação, só descreve o envio."""
+        from pathlib import Path
+        file_path = Path(file_path)
+        if self.dry_run:
+            return {"dry_run": True, "method": "POST", "url": f"{self.base}/{path}",
+                    "upload": {"field": field_name, "file": file_path.name, "bytes": file_path.stat().st_size}}
+        boundary = "----performance-agency-" + hashlib.sha256(file_path.name.encode()).hexdigest()[:16]
+        parts = []
+        for k, v in dict(fields, **self._auth()).items():
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{field_name}"; '
+                     f'filename="{file_path.name}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode())
+        parts.append(file_path.read_bytes())
+        parts.append(f"\r\n--{boundary}--\r\n".encode())
+        req = urllib.request.Request(f"{self.base}/{path}", data=b"".join(parts), method="POST",
+                                     headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        try:
+            with self._open(req, timeout=300) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            try:
+                err = json.loads(e.read().decode("utf-8")).get("error", {})
+            except Exception:
+                err = {}
+            raise MetaError(f"Meta {e.code}: {err.get('message', 'erro')} (code {err.get('code')})") from None
+
+    def upload_image(self, ad_account_id: str, file_path) -> str:
+        """Devolve o image_hash."""
+        import base64
+        from pathlib import Path
+        data = Path(file_path).read_bytes()
+        res = self._call("POST", f"act_{ad_account_id}/adimages", {"bytes": base64.b64encode(data).decode()})
+        if self.dry_run:
+            return "dryrun_hash_" + hashlib.sha256(data).hexdigest()[:12]
+        images = res.get("images", {})
+        first = next(iter(images.values()), {})
+        if not first.get("hash"):
+            raise MetaError(f"Upload de imagem sem hash: {res}")
+        return first["hash"]
+
+    def upload_video(self, ad_account_id: str, file_path, name: str) -> str:
+        """Devolve o video_id."""
+        res = self._post_file(f"act_{ad_account_id}/advideos", "source", file_path, {"name": name})
+        if self.dry_run:
+            return "dryrun_video_" + hashlib.sha256(str(file_path).encode()).hexdigest()[:12]
+        if not res.get("id"):
+            raise MetaError(f"Upload de vídeo sem id: {res}")
+        return res["id"]
+
+    MULTIDESTINATION_CTAS = [
+        {"type": "MESSAGE_PAGE", "value": {"app_destination": "MESSENGER", "link": "https://fb.com/messenger_doc/"}},
+        {"type": "WHATSAPP_MESSAGE", "value": {"app_destination": "WHATSAPP", "link": "https://api.whatsapp.com/send"}},
+        {"type": "INSTAGRAM_MESSAGE", "value": {"app_destination": "INSTAGRAM_DIRECT", "link": "https://www.instagram.com"}},
+    ]
+
+    def create_message_creative(self, ad_account_id: str, page_id: str, instagram_user_id: str, name: str,
+                                primary_text: str, headline: str, welcome_message: str,
+                                image_hash: str = "", video_id: str = "") -> dict:
+        """Criativo de anúncio que abre conversa (multidestino). Imagem: image_hash. Vídeo: video_id + capa."""
+        cta = {"type": "MESSAGE_PAGE", "value": {"app_destination": "MESSENGER"}}
+        if video_id:
+            story = {"page_id": page_id, "instagram_user_id": instagram_user_id,
+                     "video_data": {"video_id": video_id, "image_hash": image_hash, "title": headline,
+                                    "message": primary_text, "page_welcome_message": welcome_message,
+                                    "call_to_action": cta}}
+        else:
+            story = {"page_id": page_id, "instagram_user_id": instagram_user_id,
+                     "link_data": {"name": headline, "message": primary_text, "image_hash": image_hash,
+                                   "link": "https://fb.com/messenger_doc/", "page_welcome_message": welcome_message,
+                                   "call_to_action": cta}}
+        return self._call("POST", f"act_{ad_account_id}/adcreatives", {
+            "name": name, "object_story_spec": story,
+            "asset_feed_spec": {"optimization_type": "DOF_MESSAGING_DESTINATION",
+                                "call_to_actions": self.MULTIDESTINATION_CTAS},
+        })
+
+    def create_ad(self, ad_account_id: str, adset_id: str, name: str, creative_id: str, status: str = "ACTIVE") -> dict:
+        """Anúncio dentro do conjunto. Só entrega se a campanha estiver ativa."""
+        return self._call("POST", f"act_{ad_account_id}/ads",
+                          {"name": name, "adset_id": adset_id, "creative": {"creative_id": creative_id}, "status": status})
+
     def set_daily_budget(self, adset_id: str, daily_budget_cents: int) -> dict:
         return self._call("POST", adset_id, {"daily_budget": int(daily_budget_cents)})
 

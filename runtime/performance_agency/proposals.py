@@ -21,6 +21,7 @@ OPERATIONS = {
     "meta.launch.create_paused": "criar campanha PAUSADA com o conjunto de anúncios (não gasta nada até ser ativada)",
     "meta.adset.set_daily_budget": "mudar orçamento diário do conjunto",
     "meta.object.set_status": "pausar ou ativar campanha/conjunto/anúncio",
+    "meta.ads.create": "criar anúncios (imagem/vídeo) num conjunto existente",
 }
 MONEY_OPERATIONS = {"meta.adset.set_daily_budget", "meta.object.set_status"}
 RISK_LICET = "libera_gasto"
@@ -29,11 +30,20 @@ RISK_CONFIRM = "altera_conta"
 
 def assess(operation: str, params: dict, cfg_currency: str = "USD"):
     """Devolve (nível de risco, lista de impactos em linguagem simples)."""
+    if operation == "meta.ads.create":
+        n = len(params.get("ads", []))
+        if params.get("campaign_paused_expected"):
+            return RISK_CONFIRM, [f"Cria {n} anúncio(s) numa campanha PAUSADA: gasto zero até ativar.",
+                                  "Antes de criar, a campanha é conferida na Meta; se estiver ativa, a execução para."]
+        return RISK_LICET, [f"Cria {n} anúncio(s) num conjunto que pode estar ativo: começam a gastar na hora.",
+                            "Anúncio novo divide a verba com os atuais e passa pela fase de aprendizado."]
     if operation == "meta.launch.create_paused":
+        n = len(params.get("ads", []))
         return RISK_CONFIRM, [
             "Cria campanha PAUSADA e um conjunto de anúncios: gasto zero até alguém ativar a campanha.",
+            *( [f"Sobe {n} criativo(s) e cria {n} anúncio(s) dentro do conjunto (também sem gastar até a ativação)."] if n else []),
             f"O conjunto nasce com orçamento de {params.get('daily_budget_cents', 0)/100:.2f} {cfg_currency}/dia, "
-            "que só começa a valer quando a campanha for ativada (ativação exige LICET).",
+            "que só começa a valer quando a campanha for ativada (ativação exige autorização de gasto).",
         ]
     if operation == "meta.adset.set_daily_budget":
         new, old = params.get("daily_budget_cents", 0), params.get("from_daily_budget_cents", 0)
@@ -49,7 +59,7 @@ def assess(operation: str, params: dict, cfg_currency: str = "USD"):
         if params.get("status") == "ACTIVE":
             return RISK_LICET, ["Começa a gastar até o orçamento definido no conjunto."]
         return RISK_CONFIRM, ["Interrompe a entrega e as conversas novas desse item.",
-                              "Pausar não apaga nada e não reinicia o aprendizado; reativar exige LICET."]
+                              "Pausar não apaga nada e não reinicia o aprendizado; reativar exige autorização de gasto."]
     return RISK_LICET, ["Operação sem análise de impacto: tratada como de maior risco."]
 
 
@@ -118,9 +128,37 @@ def check_policy(cfg: ClientConfig, operation: str, params: dict, current_daily_
                 raise PolicyError(f"Aumento acima de {max_pct:.0f}% de uma vez (regra de escala). Divida em passos.")
 
 
+def file_sha256(path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _bind_ad_files(cfg: ClientConfig, params: dict):
+    """Grava o SHA-256 de cada arquivo de criativo na proposta: o que foi autorizado é exatamente esse arquivo."""
+    for ad in params.get("ads", []):
+        for key in ("file", "thumbnail"):
+            if ad.get(key):
+                path = (cfg.folder / ad[key]).resolve()
+                if cfg.folder.resolve() not in path.parents:
+                    raise PolicyError(f"Arquivo fora da pasta do cliente: {ad[key]}")
+                if not path.exists():
+                    raise PolicyError(f"Arquivo de criativo não encontrado: {ad[key]}")
+                ad[f"{key}_sha256"] = file_sha256(path)
+        if ad.get("type") not in ("image", "video"):
+            raise PolicyError(f"Anúncio '{ad.get('name')}': type deve ser image ou video.")
+        if ad["type"] == "video" and not ad.get("thumbnail"):
+            raise PolicyError(f"Anúncio de vídeo '{ad.get('name')}' precisa de uma imagem de capa (thumbnail).")
+        for k in ("name", "primary_text", "headline"):
+            if not ad.get(k):
+                raise PolicyError(f"Anúncio sem '{k}'.")
+
+
 def create(cfg: ClientConfig, operation: str, params: dict, summary: str, reason: str, rollback: str,
            daily_spend_delta_cents: int = 0, current_daily_cents: int = 0) -> Proposal:
     check_policy(cfg, operation, params, current_daily_cents)
+    if params.get("ads"):
+        if not cfg.instagram_user_id:
+            raise PolicyError("ID da conta do Instagram não configurado (instagram_user_id MISSING) em agencia/config.json.")
+        _bind_ad_files(cfg, params)
     now = time.time()
     p = Proposal(
         id=_next_id(cfg), client=cfg.name, operation=operation, params=params, summary=summary,

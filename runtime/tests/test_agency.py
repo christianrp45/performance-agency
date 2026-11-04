@@ -49,7 +49,13 @@ class FakeMeta(MetaClient):
         self.calls.append((method, path, params))
         if method == "GET":
             return self.live.get(path, {})
+        if path.endswith("/adimages"):
+            return {"images": {"f": {"hash": "imghash"}}}
         return {"id": "999", "success": True}
+
+    def _post_file(self, path, field_name, file_path, fields):
+        self.calls.append(("UPLOAD", path, {"file": Path(file_path).name}))
+        return {"id": "vid999"}
 
 
 class Base(unittest.TestCase):
@@ -261,6 +267,86 @@ class HumanSpendApprovalTests(Base):
     def test_invalid_mode_rejected(self):
         with self.assertRaises(ValueError):
             make_cfg(self.tmp / "h3", spend_approval="automatico")
+
+
+class AdsTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.ad_cfg = make_cfg(self.tmp / "ads", instagram_user_id="777")
+        (self.tmp / "ads" / "criativos").mkdir()
+        for f in ("img.jpg", "vid.mp4", "capa.jpg"):
+            (self.tmp / "ads" / "criativos" / f).write_bytes(f.encode() * 10)
+        self.ads = [
+            {"name": "A1 video", "type": "video", "file": "criativos/vid.mp4", "thumbnail": "criativos/capa.jpg",
+             "primary_text": "One tree.", "headline": "Launch price", "welcome_message": "Hi!"},
+            {"name": "A3 imagem", "type": "image", "file": "criativos/img.jpg",
+             "primary_text": "Carved from one tree.", "headline": "$6,600"},
+        ]
+
+    def launch(self, cfg=None):
+        cfg = cfg or self.ad_cfg
+        return proposals.create(cfg, "meta.launch.create_paused", {
+            "campaign_name": "C", "adset_name": "S", "daily_budget_cents": 1500,
+            "targeting": {"geo_locations": {"countries": ["US"]}}, "ads": [dict(a) for a in self.ads]},
+            "Lançar", "x", "x")
+
+    def test_launch_with_ads_dry_run(self):
+        p = self.launch()
+        self.assertEqual(p.risk, proposals.RISK_CONFIRM)
+        self.assertEqual(len(p.params["ads"][0]["file_sha256"]), 64)
+        executor.confirm(self.ad_cfg, p.id, f"CONFIRMO {p.id}", "Ana")
+        _, result = executor.execute(self.ad_cfg, p.id, meta=MetaClient("", dry_run=True), integrity=INTACT)
+        self.assertEqual(len(result["ads"]), 2)
+        story = json.loads(result["ads"][0]["creative"]["params"]["object_story_spec"])
+        self.assertIn("video_data", story)
+        feed = json.loads(result["ads"][0]["creative"]["params"]["asset_feed_spec"])
+        self.assertEqual(feed["optimization_type"], "DOF_MESSAGING_DESTINATION")
+        self.assertEqual(len(feed["call_to_actions"]), 3)
+
+    def test_changed_file_after_authorization_is_refused(self):
+        p = self.launch()
+        executor.confirm(self.ad_cfg, p.id, f"CONFIRMO {p.id}", "Ana")
+        (self.tmp / "ads" / "criativos" / "img.jpg").write_bytes(b"outra imagem")
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.execute(self.ad_cfg, p.id, meta=MetaClient("", dry_run=True), integrity=INTACT)
+
+    def test_missing_instagram_or_file_outside_folder(self):
+        with self.assertRaises(proposals.PolicyError):
+            self.launch(make_cfg(self.tmp / "ads", instagram_user_id=""))
+        bad = [dict(self.ads[1], file="../fora.jpg")]
+        with self.assertRaises(proposals.PolicyError):
+            proposals.create(self.ad_cfg, "meta.ads.create", {"object_id": "5", "campaign_id": "4", "ads": bad},
+                             "x", "x", "x")
+
+    def test_new_ads_in_active_campaign_require_spend_approval(self):
+        p = proposals.create(self.ad_cfg, "meta.ads.create",
+                             {"object_id": "5", "campaign_id": "4", "ads": [dict(self.ads[1])]}, "Novos", "x", "x")
+        self.assertEqual(p.risk, proposals.RISK_LICET)
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.confirm(self.ad_cfg, p.id, f"CONFIRMO {p.id}", "Ana")
+
+    def test_paused_expected_but_campaign_active_stops_in_real_mode(self):
+        os.environ["AGENCY_DRY_RUN"] = "0"
+        cfg = make_cfg(self.tmp / "ads", dry_run=False, instagram_user_id="777")
+        p = proposals.create(cfg, "meta.ads.create", {"object_id": "5", "campaign_id": "4", "campaign_paused_expected": True,
+                                                      "ads": [dict(self.ads[1])]}, "Novos", "x", "x")
+        executor.confirm(cfg, p.id, f"CONFIRMO {p.id}", "Ana")
+        meta = FakeMeta(live={"4": {"status": "ACTIVE"}})
+        with self.assertRaises(executor.ExecutionRefused):
+            executor.execute(cfg, p.id, meta=meta, integrity=INTACT)
+        self.assertFalse([c for c in meta.calls if c[0] in ("POST", "UPLOAD")])
+
+    def test_real_mode_launch_creates_everything(self):
+        os.environ["AGENCY_DRY_RUN"] = "0"
+        cfg = make_cfg(self.tmp / "ads", dry_run=False, instagram_user_id="777")
+        p = self.launch(cfg)
+        executor.confirm(cfg, p.id, f"CONFIRMO {p.id}", "Ana")
+        meta = FakeMeta()
+        p, result = executor.execute(cfg, p.id, meta=meta, integrity=INTACT)
+        paths = [c[1] for c in meta.calls]
+        self.assertEqual(p.status, "executada")
+        self.assertEqual(sum(1 for x in paths if x.endswith("/ads")), 2)
+        self.assertTrue(any(x.endswith("/advideos") for x in paths))
 
 
 class ReportTests(Base):

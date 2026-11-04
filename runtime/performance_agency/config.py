@@ -29,6 +29,7 @@ class ClientConfig:
     name: str
     ad_account_id: str = ""
     page_id: str = ""
+    instagram_user_id: str = ""
     currency: str = "USD"
     meta_api_version: str = DEFAULTS["meta_api_version"]
     licet_base_url: str = DEFAULTS["licet_base_url"]

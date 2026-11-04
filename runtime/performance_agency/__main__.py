@@ -5,6 +5,7 @@
 Comandos:
   status                              mostra configuração (sem segredos) e propostas
   propor-lancamento <spec.json>       cria proposta: campanha PAUSADA + conjunto (não gasta até ativar)
+  propor-anuncios <spec.json>         cria proposta: novos anúncios num conjunto existente
   propor-orcamento <adset_id> <atual_usd> <novo_usd> <motivo>
   propor-status <object_id> <PAUSED|ACTIVE> <motivo>
   aprovar <proposta> <intent_hash>    verifica a autorização no ledger LICET e aprova
@@ -55,7 +56,8 @@ def main(argv=None):
     cmd, args = argv[1], argv[2:]
 
     if cmd == "status":
-        print(f"Cliente: {cfg.name} | conta: act_{cfg.ad_account_id or 'MISSING'} | página: {cfg.page_id or 'MISSING'}")
+        print(f"Cliente: {cfg.name} | conta: act_{cfg.ad_account_id or 'MISSING'} | página: {cfg.page_id or 'MISSING'} | "
+              f"instagram: {cfg.instagram_user_id or 'MISSING'}")
         print(f"Simulação: {'LIGADA (nada é enviado à Meta)' if cfg.dry_run else 'DESLIGADA'} | "
               f"limite diário: {cfg.limits.get('max_daily_budget_cents', 0)/100:.2f} {cfg.currency} | "
               f"aumento máx.: {cfg.limits.get('max_increase_pct')}% | autorização de gasto: "
@@ -68,6 +70,14 @@ def main(argv=None):
         spec = json.loads(Path(args[0]).read_text(encoding="utf-8"))
         p = proposals.create(cfg, "meta.launch.create_paused", spec["params"], spec["summary"], spec["reason"],
                              spec.get("rollback", "Campanha nasce pausada; para desfazer, arquive-a no Gerenciador."))
+        print(f"Proposta {p.id} criada: {p.summary}")
+        show_request(cfg, p)
+        return 0
+
+    if cmd == "propor-anuncios":
+        spec = json.loads(Path(args[0]).read_text(encoding="utf-8"))
+        p = proposals.create(cfg, "meta.ads.create", spec["params"], spec["summary"], spec["reason"],
+                             spec.get("rollback", "Pausar os anúncios criados (proposta de status)."))
         print(f"Proposta {p.id} criada: {p.summary}")
         show_request(cfg, p)
         return 0

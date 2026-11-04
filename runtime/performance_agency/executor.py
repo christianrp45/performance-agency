@@ -101,12 +101,42 @@ def _check_live_state(meta: MetaClient, p):
         if a.get("from_daily_budget_cents") and live != int(a["from_daily_budget_cents"]):
             raise ExecutionRefused(f"O orçamento atual na Meta é {live/100:.2f}, não "
                                    f"{a['from_daily_budget_cents']/100:.2f} como na proposta. Crie uma nova proposta.")
+    elif p.operation == "meta.ads.create" and a.get("campaign_paused_expected"):
+        live = meta.get(a["campaign_id"], "status,effective_status")
+        if live.get("status") != "PAUSED":
+            raise ExecutionRefused(f"A campanha {a['campaign_id']} não está pausada ({live.get('status')}): criar anúncios "
+                                   "agora libera gasto. Faça uma proposta de anúncios com autorização de gasto.")
     elif p.operation == "meta.object.set_status":
         live = meta.get(a["object_id"], "status,effective_status")
         if live.get("status") == a["status"]:
             raise ExecutionRefused(f"{a['object_id']} já está {a['status']} na Meta. Nada a fazer.")
         if live.get("status") not in ("ACTIVE", "PAUSED"):
             raise ExecutionRefused(f"{a['object_id']} está '{live.get('status')}' na Meta: situação inesperada, consulte.")
+
+
+def _create_ads(cfg: ClientConfig, meta: MetaClient, adset_id: str, ads: list) -> list:
+    """Sobe a mídia e cria criativo + anúncio. Recusa se algum arquivo mudou depois da autorização."""
+    for ad in ads:  # confere tudo antes de enviar qualquer coisa
+        for key in ("file", "thumbnail"):
+            if ad.get(key) and proposals.file_sha256(cfg.folder / ad[key]) != ad.get(f"{key}_sha256"):
+                raise ExecutionRefused(f"O arquivo {ad[key]} mudou depois da autorização. Crie uma nova proposta.")
+    created = []
+    for ad in ads:
+        if ad["type"] == "video":
+            video_id = meta.upload_video(cfg.ad_account_id, cfg.folder / ad["file"], ad["name"])
+            thumb = meta.upload_image(cfg.ad_account_id, cfg.folder / ad["thumbnail"])
+            creative = meta.create_message_creative(cfg.ad_account_id, cfg.page_id, cfg.instagram_user_id, ad["name"],
+                                                    ad["primary_text"], ad["headline"], ad.get("welcome_message", ""),
+                                                    image_hash=thumb, video_id=video_id)
+        else:
+            img = meta.upload_image(cfg.ad_account_id, cfg.folder / ad["file"])
+            creative = meta.create_message_creative(cfg.ad_account_id, cfg.page_id, cfg.instagram_user_id, ad["name"],
+                                                    ad["primary_text"], ad["headline"], ad.get("welcome_message", ""),
+                                                    image_hash=img)
+        creative_id = creative.get("id", "<creative_id>")
+        created.append({"name": ad["name"], "creative": creative,
+                        "ad": meta.create_ad(cfg.ad_account_id, adset_id, ad["name"], creative_id)})
+    return created
 
 
 def execute(cfg: ClientConfig, proposal_id: str, meta: MetaClient = None, fetch=licet_gate.fetch_ledger_record,
@@ -126,6 +156,10 @@ def execute(cfg: ClientConfig, proposal_id: str, meta: MetaClient = None, fetch=
                                       a["daily_budget_cents"], a["targeting"], status="ACTIVE",
                                       destination_type=a.get("destination_type", "MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP"))
             result = {"campaign": camp, "adset": adset}
+            if a.get("ads"):
+                result["ads"] = _create_ads(cfg, meta, adset.get("id", "<adset_id>"), a["ads"])
+        elif p.operation == "meta.ads.create":
+            result = {"ads": _create_ads(cfg, meta, a["object_id"], a["ads"])}
         elif p.operation == "meta.adset.set_daily_budget":
             result = meta.set_daily_budget(a["object_id"], a["daily_budget_cents"])
         elif p.operation == "meta.object.set_status":

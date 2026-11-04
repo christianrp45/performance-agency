@@ -15,6 +15,21 @@ cada venda e o que fazer na próxima semana. Em português, para anúncios em qu
 | `agency-landing` | Página de destino que continua o anúncio e transforma clique em contato |
 | `agency-reporting` | Revisão semanal com uma decisão (HOLD/FIX/TEST/INVESTIGATE) e auditoria honesta |
 
+## Runtime: a agência em ação (com aprovação humana pelo LICET)
+
+As skills pensam; o runtime age. Toda ação que mexe em dinheiro vira **proposta**, um humano a
+**autoriza no [LICET](https://github.com/christianrp45/licet-protocol)** (prova criptográfica de autorização
+humana livre e consciente) e só então o executor chama a **API de Marketing da Meta (v26.0)**.
+
+- Lista fechada de operações: lançar campanha **pausada**, mudar orçamento do conjunto, pausar/ativar. Apagar não existe.
+- Limites do cliente: teto de orçamento diário e no máximo +20% por vez — proposta acima disso nem é criada.
+- Portão LICET: confere no ledger público `authorized`, não revogado, mesmo `agent_id`/`target`/`action`,
+  vínculo de tela `VERIFIED`, validade e uso único; reverifica na hora de executar.
+- Simulação por padrão; modo real exige `dry_run: false` **e** `AGENCY_DRY_RUN=0`.
+- Tudo registrado em `agencia/auditoria.jsonl` na pasta do cliente. Token só no `.env` do cliente.
+
+Guia: [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md) · Testes: `cd runtime && python -m unittest tests/test_agency.py`
+
 ## Regras da casa
 
 1. Dinheiro só se move com aprovação humana (`estado atual → mudança → efeito → como desfazer`).

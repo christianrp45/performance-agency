@@ -1,0 +1,17 @@
+{
+  "name": "Nome do cliente",
+  "ad_account_id": "",
+  "page_id": "",
+  "currency": "USD",
+  "meta_api_version": "v26.0",
+  "licet_base_url": "https://licet.dev/v1",
+  "agent_id": "performance-agency/meta-media-buyer",
+  "proposal_ttl_hours": 24,
+  "approval_max_age_minutes": 60,
+  "require_ui_binding": true,
+  "dry_run": true,
+  "limits": {
+    "max_daily_budget_cents": 1500,
+    "max_increase_pct": 20
+  }
+}

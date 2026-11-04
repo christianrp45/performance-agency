@@ -40,13 +40,17 @@ python skills/agencia/scripts/viabilidade.py --preco 6600 --margem 0.40 --orcame
 
 ## Instalação
 
-**Como plugin do Claude Code** (depois que o repositório estiver no GitHub):
+**Como plugin do Claude Code:**
 ```
-/plugin marketplace add <usuario>/agencia-performance
+/plugin marketplace add christianrp45/agencia-performance
 /plugin install agencia-performance@agencia-performance
 ```
 
-**Como skills soltas** (copia para `~/.claude/skills`):
+**Como skills soltas** (clona e copia para `~/.claude/skills`):
+```bash
+git clone https://github.com/christianrp45/agencia-performance.git
+cd agencia-performance
+```
 ```powershell
 ./install.ps1
 ```

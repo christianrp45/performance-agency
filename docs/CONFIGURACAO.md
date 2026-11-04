@@ -100,6 +100,17 @@ de dentro da pasta do cliente. Precisa de `instagram_user_id` no `config.json`.
 Anúncios novos numa campanha ativa liberam gasto (exigem autorização de gasto); com `"campaign_paused_expected": true`
 a campanha é conferida na Meta antes e a execução para se ela estiver ativa.
 
+## 4.2 Painel local
+
+```bash
+python runtime/painel.py "<pasta do cliente>"          # painel real em http://127.0.0.1:8780
+python runtime/painel.py "<pasta do cliente>" --demo   # cópia com IDs fictícios, sempre simulação
+```
+
+Mostra a situação (teto, conversas e vendas da planilha, verba de 10% gerada), as propostas com impacto e botões de
+autorização (frase + nome), executar, gerar relatório, histórico e o último relatório. Só escuta em 127.0.0.1, exige um
+token por execução em toda chamada e recusa outro Host (proteção contra outros sites e DNS rebinding). Não lê o `.env`.
+
 ## 5. Comandos
 
 ```bash

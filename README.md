@@ -28,7 +28,7 @@ humana livre e consciente) e só então o executor chama a **API de Marketing da
 - Simulação por padrão; modo real exige `dry_run: false` **e** `AGENCY_DRY_RUN=0`.
 - Tudo registrado em `agencia/auditoria.jsonl` na pasta do cliente. Token só no `.env` do cliente.
 
-Guia: [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md) · Testes: `cd runtime && python -m unittest tests/test_agency.py`
+Painel local: `python runtime/painel.py "<pasta do cliente>" --demo` · Guia: [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md) · Testes: `cd runtime && python -m unittest tests/test_agency.py`
 
 ## Regras da casa
 

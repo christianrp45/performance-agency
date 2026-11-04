@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Performance Agency · Painel</title>
+<style>
+:root{
+  --ground:#F5F4F0; --panel:#FFFFFF; --ink:#16181B; --soft:#5B6068; --rule:#E2E0DA;
+  --accent:#1E5B57;          /* verde-petróleo: ações */
+  --accent-ink:#FFFFFF;
+  --warn:#9A5B00; --warn-bg:#FDF1DE;
+  --bad:#A3271B; --bad-bg:#FBE7E4;
+  --good:#1F6B3A; --good-bg:#E4F3E8;
+  --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
+  --sans:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 var(--sans)}
+header{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;padding:14px max(20px,4vw);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+header h1{font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+header .client{font-size:15px;opacity:.85}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;letter-spacing:.02em}
+.chip.sim{background:var(--warn-bg);color:var(--warn)} .chip.live{background:var(--bad);color:#fff}
+.chip.mode{background:rgba(255,255,255,.12);color:#fff}
+.chip.risk-spend{background:var(--bad-bg);color:var(--bad)} .chip.risk-acct{background:#ECEBE6;color:var(--soft)}
+.chip.st{background:#ECEBE6;color:var(--ink)} .chip.st.ok{background:var(--good-bg);color:var(--good)} .chip.st.no{background:var(--bad-bg);color:var(--bad)}
+main{max-width:1180px;margin:0 auto;padding:24px max(20px,4vw) 60px;display:grid;gap:24px}
+.banner{border-radius:10px;padding:12px 16px;font-weight:500}
+.banner.demo{background:var(--warn-bg);color:var(--warn)} .banner.missing{background:var(--bad-bg);color:var(--bad)}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi span{font-size:13px;color:var(--soft)}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px;display:grid;gap:10px}
+.card + .card{margin-top:12px}
+.card .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card .id{font-family:var(--mono);font-size:12px;color:var(--soft)}
+.card h3{margin:0;font-size:16px;line-height:1.35}
+.card ul{margin:0;padding-left:18px;color:var(--ink)} .card li{margin:2px 0}
+.muted{color:var(--soft);font-size:13px}
+.act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px dashed var(--rule);padding-top:12px}
+input,select{font:inherit;border:1px solid #C9C6BE;border-radius:8px;padding:8px 10px;min-height:40px;background:#fff;color:var(--ink)}
+input.phrase{font-family:var(--mono);font-size:13px;flex:1 1 260px} input.who{flex:0 1 170px}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;min-height:40px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+button.spend{background:var(--bad)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid #E0A93B;outline-offset:2px}
+details summary{cursor:pointer;color:var(--soft);font-size:13px}
+details pre{font-family:var(--mono);font-size:12px;white-space:pre-wrap;background:#F3F2EE;border-radius:8px;padding:10px;margin:8px 0 0}
+.tools{display:grid;gap:10px} .tools .row{display:flex;flex-wrap:wrap;gap:8px}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.timeline li{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:13px}
+.timeline time{font-family:var(--mono);color:var(--soft);font-size:12px;margin-right:8px}
+.report{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px;overflow-x:auto}
+.report h1{font-size:18px;margin:0 0 8px} .report h2{margin-top:18px}
+.report table{border-collapse:collapse;font-size:13px;margin:8px 0} .report th,.report td{border-bottom:1px solid var(--rule);padding:6px 10px;text-align:left;white-space:nowrap}
+.empty{background:var(--panel);border:1px dashed #C9C6BE;border-radius:12px;padding:18px;color:var(--soft)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(640px,92vw);border-radius:10px;padding:12px 16px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.18);display:none}
+#toast.ok{display:block;background:var(--good-bg);color:var(--good)} #toast.err{display:block;background:var(--bad-bg);color:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.card{transition:box-shadow .2s} .card:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Performance Agency</h1>
+  <span class="client" id="client">—</span>
+  <span id="chips"></span>
+</header>
+<main>
+  <div id="banners"></div>
+
+  <section aria-labelledby="h-kpi">
+    <h2 id="h-kpi">Situação</h2>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <div class="grid2">
+    <section aria-labelledby="h-prop">
+      <h2 id="h-prop">Propostas</h2>
+      <div id="props"></div>
+    </section>
+    <div style="display:grid;gap:24px">
+      <section aria-labelledby="h-tools">
+        <h2 id="h-tools">Ações</h2>
+        <div class="card tools">
+          <label for="spec" class="muted">Plano pronto para virar proposta</label>
+          <div class="row"><select id="spec"></select><button id="btn-propor">Criar proposta</button></div>
+          <div class="row"><button class="ghost" id="btn-rel">Gerar relatório da semana</button></div>
+          <p class="muted" style="margin:0">Nada aqui gasta dinheiro: toda proposta espera a sua autorização.</p>
+        </div>
+      </section>
+      <section aria-labelledby="h-hist">
+        <h2 id="h-hist">Histórico</h2>
+        <ul class="timeline" id="hist"></ul>
+      </section>
+    </div>
+  </div>
+
+  <section aria-labelledby="h-rel">
+    <h2 id="h-rel">Último relatório</h2>
+    <div id="rel"></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const TOKEN = "__TOKEN__", DEMO = __DEMO__;
+const $ = s => document.querySelector(s);
+const money = c => "$" + (c / 100).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const fmtTime = t => new Date(t * 1000).toLocaleString("pt-BR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const STATUS = {aguardando_aprovacao: ["Aguardando você", ""], aprovada: ["Autorizada", "ok"], executada: ["Executada", "ok"],
+  falhou: ["Falhou", "no"], expirada: ["Expirou", "no"], rejeitada: ["Recusada", "no"]};
+const EVENT = {proposta_criada: "Proposta criada", aprovada: "Autorizada", aprovacao_recusada: "Autorização recusada",
+  simulada: "Simulada (nada enviado)", executada: "Executada na Meta", execucao_recusada: "Execução recusada", falhou: "Falhou"};
+
+function toast(msg, ok = true) {
+  const t = $("#toast"); t.textContent = msg; t.className = ok ? "ok" : "err";
+  clearTimeout(toast._h); toast._h = setTimeout(() => t.className = "", 6000);
+}
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method: "POST", headers: {"Content-Type": "application/json", "X-Painel-Token": TOKEN},
+    body: JSON.stringify(body)} : {headers: {"X-Painel-Token": TOKEN}});
+  const d = await r.json().catch(() => ({erro: "resposta inválida"}));
+  if (!r.ok || d.ok === false) throw new Error(d.erro || "erro");
+  return d;
+}
+
+function renderMd(md) {  // markdown simples: títulos, tabelas, listas, negrito
+  const lines = md.split("\n"); let html = "", i = 0;
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>").replace(/_(.+?)_/g, "<i>$1</i>");
+  while (i < lines.length) {
+    const l = lines[i];
+    if (l.startsWith("|")) {
+      const rows = []; while (i < lines.length && lines[i].startsWith("|")) rows.push(lines[i++]);
+      const cells = r => r.split("|").slice(1, -1).map(c => c.trim());
+      html += "<table><tr>" + cells(rows[0]).map(c => `<th>${inline(c)}</th>`).join("") + "</tr>" +
+        rows.slice(2).map(r => "<tr>" + cells(r).map(c => `<td>${inline(c)}</td>`).join("") + "</tr>").join("") + "</table>";
+      continue;
+    }
+    const h = l.match(/^(#{1,3})\s+(.*)/);
+    if (h) html += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`;
+    else if (/^\s*-\s+/.test(l)) html += `<li>${inline(l.replace(/^\s*-\s+/, ""))}</li>`;
+    else if (l.trim()) html += `<p>${inline(l)}</p>`;
+    i++;
+  }
+  return html;
+}
+
+function proposalCard(p, cfg) {
+  const [label, cls] = STATUS[p.status] || [p.status, ""];
+  const spend = p.risk === "libera_gasto";
+  const phrase = spend ? `AUTORIZO GASTO ${p.id}` : `CONFIRMO ${p.id}`;
+  const canTyped = !spend || cfg.spend_approval === "humano";
+  let actions = "";
+  if (p.status === "aguardando_aprovacao") {
+    actions = canTyped
+      ? `<div class="act">
+           <input class="phrase" aria-label="Frase de autorização" placeholder="Digite: ${esc(phrase)}" data-phrase="${esc(p.id)}">
+           <input class="who" aria-label="Seu nome" placeholder="Seu nome" data-who="${esc(p.id)}">
+           <button class="${spend ? "spend" : ""}" data-confirm="${esc(p.id)}">${spend ? "Autorizar gasto" : "Confirmar"}</button>
+         </div>`
+      : `<div class="act muted">Esta ação libera gasto e só pode ser autorizada pelo LICET (app no celular).</div>`;
+  } else if (p.status === "aprovada") {
+    actions = `<div class="act"><button data-exec="${esc(p.id)}">Executar${cfg.dry_run ? " (simulação)" : ""}</button>
+      <span class="muted">${cfg.dry_run ? "Em simulação nada é enviado à Meta." : "Vai agir na conta de anúncios real."}</span></div>`;
+  }
+  const appr = p.approval && p.approval.method
+    ? `<p class="muted">Autorizada ${p.approval.method === "licet" ? "pelo LICET" : "por " + esc(p.approval.by || "humano")}
+       em ${fmtTime(p.approval.confirmed_at || p.approval.verified_at)}${p.dry_run_last ? " · última execução: simulação" : ""}</p>` : "";
+  return `<article class="card">
+    <div class="top"><span class="chip st ${cls}">${label}</span>
+      <span class="chip ${spend ? "risk-spend" : "risk-acct"}">${spend ? "Libera gasto" : "Altera a conta, sem gasto"}</span>
+      <span class="id">${esc(p.id)}</span></div>
+    <h3>${esc(p.summary)}</h3>
+    <ul>${p.impact.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
+    <p class="muted"><b>Por quê:</b> ${esc(p.reason)}<br><b>Como desfazer:</b> ${esc(p.rollback)}</p>
+    ${appr}
+    <details><summary>Dados para o LICET</summary><pre>action   : ${esc(p.licet.action)}
+agent_id : ${esc(p.licet.agent_id)}
+target   : ${esc(p.licet.target)}</pre></details>
+    ${actions}
+  </article>`;
+}
+
+async function load() {
+  let s;
+  try { s = await api("/api/estado"); } catch (e) { toast("Não consegui ler o estado: " + e.message, false); return; }
+  const cfg = s.config;
+  $("#client").textContent = cfg.name;
+  $("#chips").innerHTML = (cfg.dry_run ? `<span class="chip sim">Simulação</span>` : `<span class="chip live">Ao vivo</span>`) +
+    ` <span class="chip mode">Gasto: ${cfg.spend_approval === "licet" ? "LICET" : "autorização digitada"}</span>`;
+  $("#banners").innerHTML =
+    (DEMO ? `<div class="banner demo">Demonstração: cópia com IDs fictícios, sempre em simulação. Nada aqui chega à Meta.</div>` : "") +
+    (s.missing.length ? `<div class="banner missing">Falta configurar: ${s.missing.join(", ")} (agencia/config.json) e o token em agencia/.env.</div>` : "");
+
+  const pl = s.planilha, lim = (cfg.limits || {}).max_daily_budget_cents || 0;
+  const verba = pl.faturamento * 0.10;
+  $("#kpis").innerHTML = [
+    [money(lim), "teto diário de anúncios"],
+    [pl.existe ? pl.conversas : "—", pl.existe ? "conversas na planilha" : "planilha de conversas ausente"],
+    [pl.vendas, "vendas registradas"],
+    [money(pl.faturamento * 100), "faturamento registrado"],
+    [money(verba * 100), "verba de marketing gerada (10%)"],
+    [s.proposals.filter(p => p.status === "aguardando_aprovacao").length, "propostas esperando você"],
+  ].map(([v, l]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+
+  $("#props").innerHTML = s.proposals.length ? s.proposals.map(p => proposalCard(p, cfg)).join("")
+    : `<div class="empty">Nenhuma proposta ainda. Escolha um plano em “Ações” e crie a primeira.</div>`;
+  $("#spec").innerHTML = s.specs.map(n => `<option>${esc(n)}</option>`).join("") || "<option value=''>nenhum plano em agencia/</option>";
+  $("#hist").innerHTML = s.audit.length ? s.audit.slice(0, 25).map(a =>
+    `<li><time>${fmtTime(a.ts)}</time><b>${esc(EVENT[a.event] || a.event)}</b> · ${esc(a.proposal)}${a.by ? " · por " + esc(a.by) : ""}${a.motivos ? "<br><span class='muted'>" + esc(a.motivos.join(" ")) + "</span>" : ""}</li>`).join("")
+    : `<li class="muted">Ainda sem histórico.</li>`;
+  $("#rel").innerHTML = s.relatorio.texto ? `<div class="report">${renderMd(s.relatorio.texto)}</div>`
+    : `<div class="empty">Nenhum relatório ainda. Use “Gerar relatório da semana”.</div>`;
+}
+
+document.addEventListener("click", async ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  const run = async (fn) => { b.disabled = true; try { const d = await fn(); toast(d.msg); await load(); } catch (e) { toast(e.message, false); } finally { b.disabled = false; } };
+  if (b.dataset.confirm) {
+    const id = b.dataset.confirm;
+    run(() => api("/api/confirmar", {id, frase: document.querySelector(`[data-phrase="${CSS.escape(id)}"]`).value,
+      nome: document.querySelector(`[data-who="${CSS.escape(id)}"]`).value}));
+  } else if (b.dataset.exec) run(() => api("/api/executar", {id: b.dataset.exec}));
+  else if (b.id === "btn-propor") run(() => api("/api/propor", {spec: $("#spec").value}));
+  else if (b.id === "btn-rel") run(() => api("/api/relatorio", {}));
+});
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

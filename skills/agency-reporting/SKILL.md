@@ -1,13 +1,13 @@
 ---
-name: agencia-relatorio
-description: Analista de performance da agência. Faz a revisão semanal (ou diária) das contas de anúncio e termina sempre com UMA decisão — HOLD, FIX, TEST ou INVESTIGATE — e um resumo de até 200 palavras para o cliente; também audita contas com nota honesta (separando saúde de cobertura de evidência). Use quando o pedido for relatório, "como está a campanha", análise do CSV da semana, auditoria de conta, "o que pausar/escalar", resultados do mês, ou quando uma rotina agendada precisar fechar a semana. Parte da suíte agencia-*.
+name: agency-reporting
+description: 'Analista de performance da agência. Faz a revisão semanal (ou diária) das contas de anúncio e termina sempre com UMA decisão — HOLD, FIX, TEST ou INVESTIGATE — e um resumo de até 200 palavras para o cliente; também audita contas com nota honesta (separando saúde de cobertura de evidência). Use quando o pedido for relatório, "como está a campanha", análise do CSV da semana, auditoria de conta, "o que pausar/escalar", resultados do mês, ou quando uma rotina agendada precisar fechar a semana. Parte da suíte agency-*.'
 ---
 
 # Relatório e decisão
 
-Regras da casa: skill `agencia`. Scripts: `agencia-meta-ads/scripts/analisar_meta_csv.py`,
-`agencia-google-ads/scripts/analisar_google_csv.py`, `agencia/scripts/viabilidade.py`.
-Modelo: `agencia/templates/relatorio-semanal.md`. Salvar em `<pasta do cliente>/relatorios/AAAA-MM-DD.md`.
+Regras da casa: skill `agency`. Scripts: `agency-meta-ads/scripts/analisar_meta_csv.py`,
+`agency-google-ads/scripts/analisar_google_csv.py`, `agency/scripts/viabilidade.py`.
+Modelo: `agency/templates/relatorio-semanal.md`. Salvar em `<pasta do cliente>/relatorios/AAAA-MM-DD.md`.
 
 ## Entradas (mesma janela sempre: esta semana vs anterior)
 

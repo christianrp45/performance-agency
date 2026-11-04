@@ -10,9 +10,9 @@ for d in "$origem"/*/; do
   cp -r "$d" "$destino/$nome"
   echo "instalada: $nome"
 done
-registro="$HOME/.claude/agencia/clientes.md"
+registro="$HOME/.claude/performance-agency/clientes.md"
 if [ ! -f "$registro" ]; then
   mkdir -p "$(dirname "$registro")"
-  printf '# Clientes da agência\n\n| Cliente | Pasta |\n|---|---|\n' > "$registro"
+  printf '# Clientes da Performance Agency\n\n| Cliente | Pasta |\n|---|---|\n' > "$registro"
   echo "criado: $registro"
 fi

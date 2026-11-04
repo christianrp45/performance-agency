@@ -1,11 +1,11 @@
 ---
-name: agencia-google-ads
-description: Gestor de Google Ads da agência de performance. Monta e opera campanhas de Pesquisa (palavras-chave por intenção, tipos de correspondência, negativas, anúncios responsivos RSA, extensões), Local (Perfil de Empresa, chamadas, "perto de mim"), Performance Max e YouTube com travas; lê relatórios de termos de pesquisa e de campanha exportados em CSV; define lances por volume de conversões e importação de vendas offline. Use quando o pedido mencionar Google Ads, AdWords, anúncio no Google, campanha de pesquisa, palavra-chave, palavra-chave negativa, termos de pesquisa, RSA, Performance Max, PMax, YouTube Ads, Local Services, CPC, índice de qualidade, parcela de impressões ou CSV do Google Ads. Parte da suíte agencia-*.
+name: agency-google-ads
+description: 'Gestor de Google Ads da agência de performance. Monta e opera campanhas de Pesquisa (palavras-chave por intenção, tipos de correspondência, negativas, anúncios responsivos RSA, extensões), Local (Perfil de Empresa, chamadas, "perto de mim"), Performance Max e YouTube com travas; lê relatórios de termos de pesquisa e de campanha exportados em CSV; define lances por volume de conversões e importação de vendas offline. Use quando o pedido mencionar Google Ads, AdWords, anúncio no Google, campanha de pesquisa, palavra-chave, palavra-chave negativa, termos de pesquisa, RSA, Performance Max, PMax, YouTube Ads, Local Services, CPC, índice de qualidade, parcela de impressões ou CSV do Google Ads. Parte da suíte agency-*.'
 ---
 
 # Google Ads
 
-Regras da casa: skill `agencia`. Teto de custo por venda: `agencia-oferta`.
+Regras da casa: skill `agency`. Teto de custo por venda: `agency-offer`.
 
 **A Pesquisa colhe a demanda que já existe; não cria demanda.** Se quase ninguém busca o produto,
 diga isso e ponha a verba na Meta/YouTube. Quando existe busca ("live edge dining table Dallas"),
@@ -64,7 +64,7 @@ num dia (o Google equilibra no mês).
 
 O maior salto de uma conta: **importar vendas offline** (GCLID / Google Click ID, ou integração com o
 CRM/planilha) com o valor real. Sem isso o lance automático otimiza para clique em "ligar" e
-formulário qualquer. Configure com a skill `agencia-rastreio`.
+formulário qualquer. Configure com a skill `agency-tracking`.
 
 ## Anúncios responsivos (RSA)
 

@@ -1,11 +1,11 @@
 ---
-name: agencia-rastreio
-description: Especialista em medição da agência de performance. Garante que cada venda seja contada e devolvida às plataformas: planilha de vendas, Pixel da Meta, API de Conversões (inclusive para conversas no WhatsApp/Messenger), tag do Google Ads e GA4, importação de conversões offline (GCLID), UTMs e deduplicação. Use quando o pedido falar de Pixel, CAPI, API de Conversões, tag do Google, GA4, GTM, UTM, conversão offline, "não sei de onde vieram as vendas", atribuição, ou quando um diagnóstico mostrar que a conta não mede venda. Parte da suíte agencia-*.
+name: agency-tracking
+description: 'Especialista em medição da agência de performance. Garante que cada venda seja contada e devolvida às plataformas: planilha de vendas, Pixel da Meta, API de Conversões (inclusive para conversas no WhatsApp/Messenger), tag do Google Ads e GA4, importação de conversões offline (GCLID), UTMs e deduplicação. Use quando o pedido falar de Pixel, CAPI, API de Conversões, tag do Google, GA4, GTM, UTM, conversão offline, "não sei de onde vieram as vendas", atribuição, ou quando um diagnóstico mostrar que a conta não mede venda. Parte da suíte agency-*.'
 ---
 
 # Rastreio: medir venda, não clique
 
-Regras da casa: skill `agencia` (inclusive: **token de API nunca no frontend**; IDs de Pixel e de tag
+Regras da casa: skill `agency` (inclusive: **token de API nunca no frontend**; IDs de Pixel e de tag
 podem ir na página).
 
 Sem devolver a venda para a plataforma, ela otimiza para quem clica ou conversa, não para quem compra.
@@ -16,7 +16,7 @@ Comece pelo nível mais simples que já mede venda e suba de nível. Detalhes de
 
 | Nível | O que é | Quando |
 |---|---|---|
-| 1. Planilha de vendas | Uma linha por contato: data, canal, origem/anúncio, produto, etapa, valor | **Sempre**, desde o 1º dia (modelo em `agencia/templates/planilha-vendas.csv`) |
+| 1. Planilha de vendas | Uma linha por contato: data, canal, origem/anúncio, produto, etapa, valor | **Sempre**, desde o 1º dia (modelo em `agency/templates/planilha-vendas.csv`) |
 | 2. Pixel + tag na página | Pixel da Meta e tag do Google (gtag) com eventos de contato | Quando houver landing page |
 | 3. Servidor | API de Conversões da Meta; conversões offline/aprimoradas do Google | Quando a venda acontece fora do site (WhatsApp, telefone, loja) |
 | 4. Otimizar por venda | Plataformas otimizando o evento de venda/lead qualificado | Com volume (~50/semana na Meta; ~30/mês por campanha no Google) |

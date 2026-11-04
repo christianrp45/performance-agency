@@ -5,7 +5,7 @@ ordenados pelo que mais custa dinheiro.
 
 ## Ordem de prioridade
 
-1. **Venda não medida.** Sem isso, todo o resto é palpite. Ação: rastreio (a skill `agencia-rastreio`)
+1. **Venda não medida.** Sem isso, todo o resto é palpite. Ação: rastreio (a skill `agency-tracking`)
    ou, no mínimo, planilha simples de "conversa → orçamento → venda" com a data.
 2. **Orçamento pulverizado / fase de aprendizado.** A Meta precisa de ~50 eventos de
    otimização por semana em cada conjunto. Conjunto com R$/US$ 10/dia otimizando para

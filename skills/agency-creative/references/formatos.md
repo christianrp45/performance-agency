@@ -12,7 +12,7 @@
   quando o preço está na arte.
 
 ## Google
-- **RSA** — ver `agencia-google-ads/references/rsa.md`.
+- **RSA** — ver `agency-google-ads/references/rsa.md`.
 - **PMax/Demand Gen** — imagens 1,91:1, 1:1 e 4:5, logo quadrado e horizontal, títulos curtos e longos,
   **vídeo próprio** (sem ele o Google monta um automático ruim).
 - **YouTube** — 15–30 s, produto nos primeiros 5 s (antes do "pular").

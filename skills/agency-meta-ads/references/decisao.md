@@ -9,7 +9,7 @@ Ex.: teto $990 × 3% = ~$30 por conversa qualificada. Revise todo mês com o dad
 (CAQ do mês passado × 0,8 é uma meta alcançável só com limpeza operacional).
 
 "Qualificada" = a pessoa respondeu à qualificação (tamanho, região, prazo) — não basta mandar "hi".
-Isso exige a planilha de conversas (skill `agencia-rastreio`).
+Isso exige a planilha de conversas (skill `agency-tracking`).
 
 ## Quantos anúncios dá para ter
 

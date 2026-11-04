@@ -1,11 +1,11 @@
 ---
-name: agencia-landing
-description: Especialista em página de destino da agência de performance. Revisa ou cria landing pages de campanha para que o clique vire contato ou venda: oferta e preço visíveis, primeira tela no celular, botões que funcionam (WhatsApp, SMS, ligação, formulário), continuidade com o anúncio, prova real, velocidade, eventos de rastreio e conformidade (depoimentos, "Made in USA", preço promocional). Use quando o pedido falar de landing page, página de vendas, página da campanha, site para anúncio, "o anúncio tem clique mas não vende", CRO, taxa de conversão da página ou revisar site antes de anunciar. Parte da suíte agencia-*.
+name: agency-landing
+description: 'Especialista em página de destino da agência de performance. Revisa ou cria landing pages de campanha para que o clique vire contato ou venda: oferta e preço visíveis, primeira tela no celular, botões que funcionam (WhatsApp, SMS, ligação, formulário), continuidade com o anúncio, prova real, velocidade, eventos de rastreio e conformidade (depoimentos, "Made in USA", preço promocional). Use quando o pedido falar de landing page, página de vendas, página da campanha, site para anúncio, "o anúncio tem clique mas não vende", CRO, taxa de conversão da página ou revisar site antes de anunciar. Parte da suíte agency-*.'
 ---
 
 # Landing page de campanha
 
-Regras da casa: skill `agencia`. Eventos: `agencia-rastreio`. Visual: identidade da ficha do cliente
+Regras da casa: skill `agency`. Eventos: `agency-tracking`. Visual: identidade da ficha do cliente
 e `design-sem-cara-de-ia`.
 
 **Antes de recomendar gastar, a página passa no checklist:** [references/checklist.md](references/checklist.md).

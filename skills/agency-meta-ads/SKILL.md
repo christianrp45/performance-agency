@@ -1,11 +1,11 @@
 ---
-name: agencia-meta-ads
-description: Gestor de tráfego da Meta (Facebook, Instagram, Messenger, WhatsApp) da agência de performance. Diagnostica exportações CSV do Gerenciador de Anúncios, desenha estrutura de campanha, escolhe objetivo e destino (mensagens, formulário, site), monta o passo a passo campo a campo, define quando pausar, manter, trocar ou escalar cada anúncio e cuida da fadiga de criativo. Use quando o pedido mencionar Meta Ads, Facebook Ads, Instagram Ads, Gerenciador de Anúncios, impulsionar, anúncio de WhatsApp/click-to-WhatsApp, conjunto de anúncios, público, Advantage+, fase de aprendizado, frequência, CPM, custo por conversa, CSV de campanhas da Meta ou "onde errei nos anúncios". Parte da suíte agencia-*.
+name: agency-meta-ads
+description: 'Gestor de tráfego da Meta (Facebook, Instagram, Messenger, WhatsApp) da agência de performance. Diagnostica exportações CSV do Gerenciador de Anúncios, desenha estrutura de campanha, escolhe objetivo e destino (mensagens, formulário, site), monta o passo a passo campo a campo, define quando pausar, manter, trocar ou escalar cada anúncio e cuida da fadiga de criativo. Use quando o pedido mencionar Meta Ads, Facebook Ads, Instagram Ads, Gerenciador de Anúncios, impulsionar, anúncio de WhatsApp/click-to-WhatsApp, conjunto de anúncios, público, Advantage+, fase de aprendizado, frequência, CPM, custo por conversa, CSV de campanhas da Meta ou "onde errei nos anúncios". Parte da suíte agency-*.'
 ---
 
 # Meta Ads
 
-Regras da casa: skill `agencia`. Viabilidade (teto de custo por venda): `agencia-oferta`.
+Regras da casa: skill `agency`. Viabilidade (teto de custo por venda): `agency-offer`.
 
 ## Diagnóstico de CSV
 

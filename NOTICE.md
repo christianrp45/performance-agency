@@ -12,7 +12,7 @@ Esses projetos, por sua vez, creditam: Ivan Falco (ads-skills), Daniel Agrici
 ([claude-ads](https://github.com/AgriciDaniel/claude-ads), MIT), Marek Dąbrowski
 ("The Paid Ads Operator's Guide to Claude") e Alex Hormozi (*$100M Offers*, equação de valor).
 
-**Autoria própria:** orquestrador `agencia`, regras da casa, organização por pasta de cliente, ficha e
+**Autoria própria:** orquestrador `agency`, regras da casa, organização por pasta de cliente, ficha e
 modelos, canais de contato por país, objetivos por fase para venda consultiva/ticket alto, níveis de
 rastreio com venda por mensagem, checklist de landing page e os scripts `viabilidade.py`,
 `analisar_meta_csv.py`, `analisar_google_csv.py` e `checar_rsa.py`.

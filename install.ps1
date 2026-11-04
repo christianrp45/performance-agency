@@ -9,9 +9,9 @@ Get-ChildItem $origem -Directory | ForEach-Object {
     Copy-Item $_.FullName $alvo -Recurse
     Write-Host "instalada: $($_.Name)"
 }
-$registro = Join-Path $HOME ".claude\agencia\clientes.md"
+$registro = Join-Path $HOME ".claude\performance-agency\clientes.md"
 if (-not (Test-Path $registro)) {
     New-Item -ItemType Directory -Force (Split-Path $registro) | Out-Null
-    "# Clientes da agência`n`n| Cliente | Pasta |`n|---|---|`n" | Out-File $registro -Encoding utf8
+    "# Clientes da Performance Agency`n`n| Cliente | Pasta |`n|---|---|`n" | Out-File $registro -Encoding utf8
     Write-Host "criado: $registro"
 }

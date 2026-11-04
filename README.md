@@ -1,4 +1,4 @@
-# Agência de Performance · skills para Claude Code
+# Performance Agency · skills e agentes para Claude
 
 Uma agência de marketing de performance em forma de skills: um **diretor** que recebe o pedido e
 coordena **sete especialistas**. O foco é **venda registrada** — cada entrega responde quanto custou
@@ -6,14 +6,14 @@ cada venda e o que fazer na próxima semana. Em português, para anúncios em qu
 
 | Skill | Papel |
 |---|---|
-| `agencia` | Diretor: briefing, pasta e ficha do cliente, quem faz o quê, ciclo completo, regras da casa |
-| `agencia-oferta` | Oferta, preço de lançamento, parcelamento, garantia e **teto de custo por venda** |
-| `agencia-criativos` | Matriz de ganchos, formatos e medidas, diagnóstico de anúncio fraco, identidade sem "cara de IA" |
-| `agencia-meta-ads` | Facebook/Instagram/WhatsApp: estrutura, objetivos, regras de pausar/trocar/escalar, fadiga |
-| `agencia-google-ads` | Pesquisa, Local, PMax, YouTube: palavras-chave, negativas, RSAs, lances, vendas offline |
-| `agencia-rastreio` | Planilha de vendas, Pixel, API de Conversões, tag do Google/GA4, UTMs, GCLID |
-| `agencia-landing` | Página de destino que continua o anúncio e transforma clique em contato |
-| `agencia-relatorio` | Revisão semanal com uma decisão (HOLD/FIX/TEST/INVESTIGATE) e auditoria honesta |
+| `agency` | Diretor: briefing, pasta e ficha do cliente, quem faz o quê, ciclo completo, regras da casa |
+| `agency-offer` | Oferta, preço de lançamento, parcelamento, garantia e **teto de custo por venda** |
+| `agency-creative` | Matriz de ganchos, formatos e medidas, diagnóstico de anúncio fraco, identidade sem "cara de IA" |
+| `agency-meta-ads` | Facebook/Instagram/WhatsApp: estrutura, objetivos, regras de pausar/trocar/escalar, fadiga |
+| `agency-google-ads` | Pesquisa, Local, PMax, YouTube: palavras-chave, negativas, RSAs, lances, vendas offline |
+| `agency-tracking` | Planilha de vendas, Pixel, API de Conversões, tag do Google/GA4, UTMs, GCLID |
+| `agency-landing` | Página de destino que continua o anúncio e transforma clique em contato |
+| `agency-reporting` | Revisão semanal com uma decisão (HOLD/FIX/TEST/INVESTIGATE) e auditoria honesta |
 
 ## Regras da casa
 
@@ -29,27 +29,27 @@ cada venda e o que fazer na próxima semana. Em português, para anúncios em qu
 
 | Script | Faz |
 |---|---|
-| `skills/agencia/scripts/viabilidade.py` | Lucro por venda, teto de custo por venda, máximo por conversa, ROAS de equilíbrio, orçamento para as primeiras vendas |
-| `skills/agencia-meta-ads/scripts/analisar_meta_csv.py` | Diagnóstico do CSV do Gerenciador de Anúncios da Meta (PT/EN) |
-| `skills/agencia-google-ads/scripts/analisar_google_csv.py` | Diagnóstico do relatório de termos/palavras/campanhas do Google Ads (CSV/TSV, UTF-8/16, PT/EN) |
-| `skills/agencia-google-ads/scripts/checar_rsa.py` | Confere limites de títulos (30), descrições (90), caminhos (15) |
+| `skills/agency/scripts/viabilidade.py` | Lucro por venda, teto de custo por venda, máximo por conversa, ROAS de equilíbrio, orçamento para as primeiras vendas |
+| `skills/agency-meta-ads/scripts/analisar_meta_csv.py` | Diagnóstico do CSV do Gerenciador de Anúncios da Meta (PT/EN) |
+| `skills/agency-google-ads/scripts/analisar_google_csv.py` | Diagnóstico do relatório de termos/palavras/campanhas do Google Ads (CSV/TSV, UTF-8/16, PT/EN) |
+| `skills/agency-google-ads/scripts/checar_rsa.py` | Confere limites de títulos (30), descrições (90), caminhos (15) |
 
 ```bash
-python skills/agencia/scripts/viabilidade.py --preco 6600 --margem 0.40 --orcamento-dia 75
+python skills/agency/scripts/viabilidade.py --preco 6600 --margem 0.40 --orcamento-dia 75
 ```
 
 ## Instalação
 
 **Como plugin do Claude Code:**
 ```
-/plugin marketplace add christianrp45/agencia-performance
-/plugin install agencia-performance@agencia-performance
+/plugin marketplace add christianrp45/performance-agency
+/plugin install performance-agency@performance-agency
 ```
 
 **Como skills soltas** (clona e copia para `~/.claude/skills`):
 ```bash
-git clone https://github.com/christianrp45/agencia-performance.git
-cd agencia-performance
+git clone https://github.com/christianrp45/performance-agency.git
+cd performance-agency
 ```
 ```powershell
 ./install.ps1
@@ -62,8 +62,8 @@ cd agencia-performance
 
 Os dados de cada cliente ficam **na pasta do cliente**, nunca neste repositório:
 `<pasta>/cliente/ficha.md`, `dados/`, `criativos/`, `site/`, `relatorios/`.
-O índice `~/.claude/agencia/clientes.md` (privado) diz onde fica a pasta de cada um.
-Modelos em [`skills/agencia/templates/`](skills/agencia/templates/).
+O índice `~/.claude/performance-agency/clientes.md` (privado) diz onde fica a pasta de cada um.
+Modelos em [`skills/agency/templates/`](skills/agency/templates/).
 
 ## Créditos
 

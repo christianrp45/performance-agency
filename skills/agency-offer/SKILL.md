@@ -1,16 +1,16 @@
 ---
-name: agencia-oferta
-description: Especialista em oferta e viabilidade da agência de performance. Monta ou conserta a oferta (o que se vende, bônus, garantia, urgência verdadeira, nome, preço e parcelamento) e calcula quanto dá para pagar por venda a partir de preço, margem e frete. Use quando o pedido falar de oferta, preço de lançamento, promoção, desconto, parcelamento/financiamento, garantia, escassez, "por que não converte", "quanto posso gastar por venda", teto de CPA/CAC, ROAS de equilíbrio ou orçamento de teste. Parte da suíte agencia-*.
+name: agency-offer
+description: 'Especialista em oferta e viabilidade da agência de performance. Monta ou conserta a oferta (o que se vende, bônus, garantia, urgência verdadeira, nome, preço e parcelamento) e calcula quanto dá para pagar por venda a partir de preço, margem e frete. Use quando o pedido falar de oferta, preço de lançamento, promoção, desconto, parcelamento/financiamento, garantia, escassez, "por que não converte", "quanto posso gastar por venda", teto de CPA/CAC, ROAS de equilíbrio ou orçamento de teste. Parte da suíte agency-*.'
 ---
 
 # Oferta e viabilidade
 
 A oferta é o produto que o cliente realmente compra. Texto melhor em oferta fraca rende pouco;
-oferta forte com texto médio converte já. Siga as regras da casa da skill `agencia`.
+oferta forte com texto médio converte já. Siga as regras da casa da skill `agency`.
 
 ## 1. Viabilidade primeiro (sem ela, não há orçamento)
 
-Rode `scripts/viabilidade.py` (pasta da skill `agencia`):
+Rode `scripts/viabilidade.py` (pasta da skill `agency`):
 
 ```bash
 python viabilidade.py --preco 6600 --margem 0.40 --frete 0 --fechamento 0.02,0.04 --custo-conversa 15,25

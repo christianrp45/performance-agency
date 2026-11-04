@@ -3,7 +3,7 @@ clientes/
 dados/
 relatorios/
 *.csv
-!skills/agencia/templates/planilha-vendas.csv
+!skills/agency/templates/planilha-vendas.csv
 .env
 *.env
 __pycache__/

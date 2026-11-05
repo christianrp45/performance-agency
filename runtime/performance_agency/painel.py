@@ -154,8 +154,11 @@ def make_handler(folder: Path, token: str, demo: bool, port: int = 8780):
             cfg = config.load(folder)
             try:
                 if self.path == "/api/confirmar":
+                    if not str(body.get("nome", "")).strip():
+                        return self._json(422, {"ok": False, "erro": "Escreva o seu nome: ele fica registrado no histórico."})
                     p = executor.confirm(cfg, body["id"], body.get("frase", ""), body.get("nome", ""))
-                    return self._json(200, {"ok": True, "msg": f"{p.id} autorizada por {p.approval.get('by')}."})
+                    return self._json(200, {"ok": True, "msg": f"{p.id} autorizada por {p.approval.get('by')}. "
+                                                                f"Agora clique em Executar para aplicar."})
                 if self.path == "/api/executar":
                     p, _ = executor.execute(cfg, body["id"])
                     sim = p.execution.get("dry_run")

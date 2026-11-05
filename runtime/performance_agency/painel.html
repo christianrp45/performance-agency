@@ -45,6 +45,8 @@ h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft
 .act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px dashed var(--rule);padding-top:12px}
 input,select{font:inherit;border:1px solid #C9C6BE;border-radius:8px;padding:8px 10px;min-height:40px;background:#fff;color:var(--ink)}
 input.phrase{font-family:var(--mono);font-size:13px;flex:1 1 260px} input.who{flex:0 1 170px}
+input::placeholder{color:#A8A49B;font-style:italic;font-family:inherit}
+.howto{margin:10px 0 6px;font-size:14px} .howto .say{font-family:var(--mono);background:#F1ECE4;padding:2px 6px;border-radius:5px;white-space:nowrap}
 button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;min-height:40px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
 button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 button.spend{background:var(--bad)}
@@ -162,14 +164,16 @@ function proposalCard(p, cfg) {
   let actions = "";
   if (p.status === "aguardando_aprovacao") {
     actions = canTyped
-      ? `<div class="act">
-           <input class="phrase" aria-label="Frase de autorização" placeholder="Digite: ${esc(phrase)}" data-phrase="${esc(p.id)}">
+      ? `<p class="howto"><b>Passo 1 de 2:</b> para autorizar, escreva no campo abaixo a frase <b class="say">${esc(phrase)}</b> e o seu nome.</p>
+         <div class="act">
+           <input class="phrase" aria-label="Frase de autorização" placeholder="escreva a frase aqui" autocomplete="off" data-phrase="${esc(p.id)}">
            <input class="who" aria-label="Seu nome" placeholder="Seu nome" data-who="${esc(p.id)}">
            <button class="${spend ? "spend" : ""}" data-confirm="${esc(p.id)}">${spend ? "Autorizar gasto" : "Confirmar"}</button>
          </div>`
       : `<div class="act muted">Esta ação libera gasto e só pode ser autorizada pelo LICET (app no celular).</div>`;
   } else if (p.status === "aprovada") {
-    actions = `<div class="act"><button data-exec="${esc(p.id)}">Executar${cfg.dry_run ? " (simulação)" : ""}</button>
+    actions = `<p class="howto"><b>Passo 2 de 2:</b> autorizada, mas ainda não aplicada. Clique em Executar para valer.</p>
+      <div class="act"><button data-exec="${esc(p.id)}">Executar${cfg.dry_run ? " (simulação)" : ""}</button>
       <span class="muted">${cfg.dry_run ? "Em simulação nada é enviado à Meta." : "Vai agir na conta de anúncios real."}</span></div>`;
   }
   const appr = p.approval && p.approval.method

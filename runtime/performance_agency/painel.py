@@ -16,7 +16,9 @@ import secrets
 import shutil
 import sys
 import tempfile
+import threading
 import time
+import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -185,6 +187,7 @@ def main(argv=None):
     ap.add_argument("pasta")
     ap.add_argument("--porta", type=int, default=8780)
     ap.add_argument("--demo", action="store_true", help="cópia temporária com IDs fictícios, sempre em simulação")
+    ap.add_argument("--sem-navegador", action="store_true", help="não abrir o navegador automaticamente")
     a = ap.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     folder = Path(a.pasta)
@@ -194,7 +197,10 @@ def main(argv=None):
     config.load(folder)  # falha cedo se não houver config
     token = secrets.token_urlsafe(24)
     server = ThreadingHTTPServer(("127.0.0.1", a.porta), make_handler(folder, token, a.demo, a.porta))
-    print(f"Painel em http://127.0.0.1:{a.porta}  (Ctrl+C para fechar)")
+    url = f"http://127.0.0.1:{a.porta}"
+    print(f"Painel em {url}  (deixe esta janela aberta; Ctrl+C para fechar)")
+    if not a.sem_navegador:
+        threading.Timer(0.8, webbrowser.open, args=(url,)).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
